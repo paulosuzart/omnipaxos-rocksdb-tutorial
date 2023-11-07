@@ -174,7 +174,7 @@ fn parse_command(line: String) -> Result<(KVCommand, Option<u64>), ParseCommandE
             let value = words
                 .next()
                 .ok_or(ParseCommandError("Not enough arguments".to_string()))?;
-            let port = words.next().map(|x| x.parse::<u64>().unwrap());
+            let port = words.next().map(|x| x.parse::<u64>().unwrap_or(1));
             (KVCommand::Delete(value.to_string()), port.into())
         }
         "get" => {

@@ -52,6 +52,7 @@ pub enum KVCommand {
 pub enum APIResponse {
     Decided(u64),
     Get(String, Option<String>),
+    NotALeader(u64),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

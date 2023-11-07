@@ -13,6 +13,7 @@ use tokio::time;
 pub enum APIResponse {
     Decided(u64),
     Get(String, Option<String>),
+    NotALeader(u64),
 }
 
 pub struct Server {
@@ -20,6 +21,7 @@ pub struct Server {
     pub network: Network,
     pub database: Database,
     pub last_decided_idx: u64,
+    pub pid: u64,
 }
 
 impl Server {
@@ -30,9 +32,17 @@ impl Server {
                 Message::APIRequest(kv_cmd) => {
                     match kv_cmd {
                         KVCommand::Get(key) => {
-                            let value = self.database.handle_command(KVCommand::Get(key.clone()));
-                            let msg = Message::APIResponse(APIResponse::Get(key, value));
-                            self.network.send(0, msg).await;
+                            let leader = self.omni_paxos.get_current_leader().unwrap();
+                            let pid = self.pid;
+                            println!("Current leader: {:?} - {:?}\n", leader, pid);
+                            if leader != pid {
+                                let msg = Message::APIResponse(APIResponse::NotALeader(leader));
+                                self.network.send(0, msg).await;
+                            } else {
+                                let value = self.database.handle_command(KVCommand::Get(key.clone()));
+                                let msg = Message::APIResponse(APIResponse::Get(key, value));
+                                self.network.send(0, msg).await;    
+                            }
                         },
                         cmd => {
                             self.omni_paxos.append(cmd).unwrap();
