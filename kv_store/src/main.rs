@@ -57,6 +57,7 @@ async fn main() {
         network: network::Network::new().await,
         database: database::Database::new(format!("db_{}", *PID).as_str()),
         last_decided_idx: 0,
+        pid: *PID,
     };
     server.run().await;
 }
